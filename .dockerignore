@@ -1,0 +1,32 @@
+# Node modules and npm cache
+node_modules
+npm-debug.log
+package-lock.json.*
+
+# Logs
+logs
+*.log
+
+# Environment variables
+.env
+
+# Build artifacts and cache
+dist
+build
+*.cache
+coverage
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Git-related files
+.git
+.gitignore
+
+# Docker-related files (to avoid including this file in the image)
+.dockerignore
+Dockerfile
+.idea

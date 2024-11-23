@@ -1,0 +1,59 @@
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const setupRoutes = require('./routes');
+const executionContextMiddleware = require('./core/execution-context/executionContextMiddleware');
+const getRedisClient = require('./core/clients/redis-client/redisClient');
+const Joi = require("joi");
+
+
+module.exports = async function initializeApp() {
+
+    await getRedisClient({
+        url: 'redis://localhost:6379',
+        reconnectStrategy: {
+            maxRetries: 2
+        }
+    });
+
+    const app = express();
+
+    process.on('uncaughtException', (err) => {
+        console.error('Uncaught Exception:', err);
+        process.exit(1);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('Unhandled Rejection:', reason);
+        process.exit(1);
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+        app.use(logger('dev'));
+    }
+
+    app.use(express.json());
+    app.use(express.urlencoded({extended: false}));
+    app.use(cookieParser());
+
+    app.use(executionContextMiddleware);
+    setupRoutes(app);
+
+// // catch 404 and forward to error handler
+// app.use(function(req, res, next) {
+//   next(createError(404));
+// });
+
+// error handler
+    app.use(function (err, req, res, next) {
+        // set locals, only providing error in development
+        res.locals.message = err.message;
+        res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+        // render the error page
+        res.status(err.status || 500);
+        res.render('error');
+    });
+
+    return app;
+};
