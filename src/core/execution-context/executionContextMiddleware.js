@@ -1,5 +1,3 @@
-'use strict';
-
 const {createCtx} = require('./executionContextUtil');
 
 const executionContextMiddleware = (req, res, next) => {

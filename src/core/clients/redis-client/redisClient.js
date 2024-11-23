@@ -1,25 +1,15 @@
-const appLogger = require("../../logger/appLogger");
 module.exports = async function getRedisClient(config) {
 
-    const Joi = require('joi');
+    const redis = require('redis');
+    const appLogger = require('../../logger/appLogger');
     const RedisClientError = require("./RedisClientError");
-
-
-    const configSchema = Joi.object({
-        url: Joi.string().required(),
-        reconnectStrategy: Joi.object().keys({
-            maxRetries: Joi.number().required(),
-        })
-    });
+    const configSchema = require('./configSchema');
 
     const { error, value } = configSchema.validate(config || {});
 
     if (error) {
         throw new Error('Redis configuration validation error');
     }
-
-    const redis = require('redis');
-    const appLogger = require('../../logger/appLogger');
 
     const client = redis.createClient({
         url: config.url,
@@ -47,7 +37,7 @@ module.exports = async function getRedisClient(config) {
 
     await client.connect();
 
-    appLogger.info('Redis connection opened');
+    appLogger.info('Redis connection opened', value);
 
     const gracefulShutdown = async () => {
         appLogger.info('Closing Redis connection...');
@@ -58,23 +48,5 @@ module.exports = async function getRedisClient(config) {
     process.on('SIGINT', gracefulShutdown);  // Handle Ctrl+C
     process.on('SIGTERM', gracefulShutdown); // Handle process termination
 
-    // process.on('uncaughtException', async (err) => {
-    //     console.error('Uncaught exception:', err);
-    //     await client.disconnect();
-    //     console.log('Redis connection closed');
-    // });
-
     return client;
 }
-
-//
-// By default, Node.js allows up to 10 listeners per event. Adding more will trigger a warning:
-//     makefile
-// Copy code
-//
-// (node:12345) MaxListenersExceededWarning: Possible EventEmitter memory leak detected.
-//     To increase the limit, use:
-// javascript
-// Copy code
-//
-// process.setMaxListeners(15); // Example: Increase to 15 listeners

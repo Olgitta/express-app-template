@@ -7,4 +7,4 @@ class RedisClientError extends Error {
     }
 }
 
-module.exports = RedisClientError
+module.exports = RedisClientError;
