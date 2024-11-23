@@ -14,12 +14,8 @@ Key features include:
 - [Installation](#installation)
 - [Usage](#usage)
 - [Features](#features)
-- [Project Structure](#project-structure)
-- [Dependencies](#dependencies)
 - [Configuration](#configuration)
-- [Testing](#testing)
-- [Contributors](#contributors)
-- [License](#license)
+- [Modules](#modules)
 
 ## Installation
 
@@ -39,8 +35,7 @@ Key features include:
    ```
 3. (Optional) Run the app in a Docker container:
    ```bash
-   docker build -t express-app-template .
-   docker run -p 3000:3000 express-app-template
+   docker-compose up
    ```
 
 ## Usage
@@ -54,7 +49,6 @@ npm run dev
 ### Production
 Build and run the application for production:
 ```bash
-npm run build
 npm start
 ```
 
@@ -66,69 +60,12 @@ Access the application at [http://localhost:3000](http://localhost:3000).
 - **Environment Configurations**: Configurable settings via `appConfig.js`.
 - **Code Quality**: Enforced coding standards using ESLint.
 
-## Project Structure
-
-```
-express-app-template/
-├── bin/                    # Application entry points
-│   └── server.js           # Starts the server
-├── src/                    # Source code
-│   ├── app.js              # Main application file
-│   ├── config/             # Configuration files
-│   │   └── appConfig.js    # App-specific configurations
-│   ├── core/               # Core utilities and middleware
-│   ├── routes/             # API and application routes
-├── test/                   # Tests for the application
-├── .dockerignore           # Files to ignore in Docker builds
-├── .editorconfig           # Code style settings
-├── .gitignore              # Git ignored files
-├── Dockerfile              # Docker configuration
-├── package.json            # Node.js metadata and dependencies
-└── README.md               # Project documentation
-```
-
-## Dependencies
-
-Dependencies are listed in the `package.json` file. Key dependencies include:
-- `express`: Web framework.
-- `dotenv`: Environment variable management.
-- `eslint`: Code linting and style enforcement.
-
-Install all dependencies using:
-```bash
-npm install
-```
-
 ## Configuration
 
 Environment-specific settings can be customized in `src/config/appConfig.js`.
 
-### Example:
-```javascript
-module.exports = {
-    port: process.env.PORT || 3000,
-    env: process.env.NODE_ENV || 'development',
-};
-```
+## Modules
 
-Add a `.env` file in the root directory for sensitive configurations:
-```
-PORT=3000
-NODE_ENV=development
-```
-
-## Testing
-
-Tests can be added to the `test/` directory. To run tests:
-```bash
-npm test
-```
-
-## Contributors
-- **[Your Name]** – Project Lead
-
-Feel free to add contributors here.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+- Redis Client: [README](./src/core/clients/redis-client/README.md)
+- Response Builder: [README](./src/core/response-builder/README.md)
+- Execution Context: [README](./src/core/execution-context/README.md)

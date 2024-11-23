@@ -2,9 +2,11 @@ require('dotenv').config({
     path: `.env.${process.env.NODE_ENV}`,
 });
 
+const {toBoolean} = require('../core/utils/converters');
+
 const appConfig = {
     port: Number(process.env.PORT),
-    redisIsOn: Boolean(process.env.REDIS_ON),
+    redisIsOn: toBoolean(process.env.REDIS_ON),
     redis: {
         url: process.env.REDIS_URL,
         reconnectStrategy: {
