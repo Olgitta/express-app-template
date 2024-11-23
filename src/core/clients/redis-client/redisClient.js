@@ -1,10 +1,9 @@
-const appLogger = require("../../logger/appLogger");
 module.exports = async function getRedisClient(config) {
 
+    const redis = require('redis');
+    const appLogger = require('../../logger/appLogger');
     const Joi = require('joi');
     const RedisClientError = require("./RedisClientError");
-
-
     const configSchema = Joi.object({
         url: Joi.string().required(),
         reconnectStrategy: Joi.object().keys({
@@ -17,9 +16,6 @@ module.exports = async function getRedisClient(config) {
     if (error) {
         throw new Error('Redis configuration validation error');
     }
-
-    const redis = require('redis');
-    const appLogger = require('../../logger/appLogger');
 
     const client = redis.createClient({
         url: config.url,

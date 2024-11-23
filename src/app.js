@@ -4,17 +4,13 @@ const logger = require('morgan');
 const setupRoutes = require('./routes');
 const executionContextMiddleware = require('./core/execution-context/executionContextMiddleware');
 const getRedisClient = require('./core/clients/redis-client/redisClient');
-const Joi = require("joi");
-
+const appConfig = require('../src/config/appConfig');
 
 module.exports = async function initializeApp() {
 
-    await getRedisClient({
-        url: 'redis://localhost:6379',
-        reconnectStrategy: {
-            maxRetries: 2
-        }
-    });
+    if(appConfig.redisIsOn) {
+        await getRedisClient(appConfig.redis);
+    }
 
     const app = express();
 

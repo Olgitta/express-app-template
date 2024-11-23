@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// const app = require('../src/app');
+const appConfig = require('../src/config/appConfig');
 
 const initializeApp = require('../src/app');
 
@@ -18,7 +18,7 @@ function startServer(app) {
 
     const http = require('http');
 
-    const port = normalizePort(process.env.PORT || '3000');
+    const port = normalizePort(appConfig.port);
     app.set('port', port);
 
     const server = http.createServer(app);

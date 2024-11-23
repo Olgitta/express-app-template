@@ -3,14 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node bin/server.js",
-    "dev": "nodemon bin/server.js",
+    "start": "cross-env NODE_ENV=production node bin/server.js",
+    "dev": "cross-env NODE_ENV=development node bin/server.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "jest"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
     "express": "5.0.0",
     "joi": "^17.13.3",
     "morgan": "~1.9.1",
@@ -22,7 +24,6 @@
     "@eslint/js": "^9.15.0",
     "eslint": "^9.15.0",
     "globals": "^15.12.0",
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.7"
+    "jest": "^29.7.0"
   }
 }
