@@ -4,12 +4,19 @@ const logger = require('morgan');
 const setupRoutes = require('./routes');
 const executionContextMiddleware = require('./core/execution-context/executionContextMiddleware');
 const appConfig = require('../src/config/appConfig');
+const getRedisClient = require("./core/clients/redis-client/redisClient");
 
 module.exports = async function initializeApp() {
 
     if(appConfig.redisIsOn) {
         const getRedisClient = require('./core/clients/redis-client/redisClient');
         await getRedisClient(appConfig.redis);
+    }
+
+
+    if(appConfig.mongoIsOn) {
+        const getMongoClient = require('./core/clients/mongodb-client/mongodbClient');
+        await getMongoClient(appConfig.mongo);
     }
 
     const app = express();

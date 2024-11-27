@@ -2,13 +2,13 @@ version: '3.8'
 
 services:
     express-app:
-        build:
-            context: .
+        image: express-app
         container_name: express-app
         ports:
             - "3000:3000"
         depends_on:
             - redis
+            - mongodb
 
     mongodb:
         image: mongo:6.0
