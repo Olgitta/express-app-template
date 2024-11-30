@@ -3,31 +3,27 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const setupRoutes = require('./routes');
 const executionContextMiddleware = require('./core/execution-context/executionContextMiddleware');
-const appConfig = require('../src/config/appConfig');
-const getRedisClient = require("./core/clients/redis-client/redisClient");
+const appConfig = require('./config/appConfig').getAppConfig();
+const setupClients = require('./core/clients/index');
+const appLogger = require("./core/logger/appLogger");
 
 module.exports = async function initializeApp() {
 
-    if(appConfig.redisIsOn) {
-        const getRedisClient = require('./core/clients/redis-client/redisClient');
-        await getRedisClient(appConfig.redis);
-    }
-
-
-    if(appConfig.mongoIsOn) {
-        const getMongoClient = require('./core/clients/mongodb-client/mongodbClient');
-        await getMongoClient(appConfig.mongo);
-    }
+    await setupClients(appConfig);
 
     const app = express();
 
-    process.on('uncaughtException', (err) => {
-        console.error('Uncaught Exception:', err);
+    process.on('exit', async () => {
+        appLogger.info('Execution process exited with exit', process.exitCode);
+    });
+
+    process.on('uncaughtException', (err, origin) => {
+        appLogger.error('Uncaught Exception:', err, origin);
         process.exit(1);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-        console.error('Unhandled Rejection:', reason);
+        appLogger.error('Unhandled Rejection:', reason, promise);
         process.exit(1);
     });
 

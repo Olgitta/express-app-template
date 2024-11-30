@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const appConfig = require('../src/config/appConfig');
+const appConfig = require('../src/config/appConfig').getAppConfig();
 
 const initializeApp = require('../src/app');
 

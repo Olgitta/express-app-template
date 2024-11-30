@@ -1,25 +1,47 @@
+'use strict';
+
 require('dotenv').config({
     path: `.env.${process.env.NODE_ENV}`,
 });
 
-const {toBoolean} = require('../core/utils/converters');
+const {toBoolean} = require('../core/utils/conversions');
+const appLogger = require("../core/logger/appLogger");
 
-const appConfig = {
+let appConfig = null;
 
-    port: Number(process.env.PORT),
+const setupAppConfig = () => {
+    appConfig = {
 
-    redisIsOn: toBoolean(process.env.REDIS_ON),
-    redis: {
-        url: process.env.REDIS_URL,
-        reconnectStrategy: {
-            maxRetries: Number(process.env.REDIS_RECONNECT_STRATEGY_MAXRETRIES),
+        port: Number(process.env.PORT),
+
+        redisIsOn: toBoolean(process.env.REDIS_ON),
+        redis: {
+            url: process.env.REDIS_URL,
+            reconnectStrategy: {
+                maxRetries: Number(process.env.REDIS_RECONNECT_STRATEGY_MAXRETRIES),
+            }
+        },
+
+        mongoIsOn: toBoolean(process.env.MONGODB_ON),
+        mongo: {
+            url: process.env.MONGODB_URL,
+        },
+
+        mysqlIsOn: toBoolean(process.env.MYSQL_ON),
+        mysql: {
+            host: process.env.MYSQL_HOST,
+            user: process.env.MYSQL_USER,
+            password: process.env.MYSQL_PASSWORD,
+            database: process.env.MYSQL_DATABASE,
         }
-    },
+    };
 
-    mongoIsOn: toBoolean(process.env.MONGODB_ON),
-    mongo: {
-        url: process.env.MONGODB_URL,
-    },
+    appLogger.info('AppConfig loaded :', appConfig);
 };
 
-module.exports = appConfig;
+module.exports.getAppConfig = () => {
+    if(!appConfig) {
+        setupAppConfig();
+    }
+    return appConfig;
+};

@@ -66,6 +66,5 @@ Environment-specific settings can be customized in `src/config/appConfig.js`.
 
 ## Modules
 
-- Redis Client: [README](./src/core/clients/redis-client/README.md)
 - Response Builder: [README](./src/core/response-builder/README.md)
 - Execution Context: [README](./src/core/execution-context/README.md)

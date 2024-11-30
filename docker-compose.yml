@@ -2,13 +2,16 @@ version: '3.8'
 
 services:
     express-app:
-        image: express-app
+#        image: express-app
+        build:
+            context: .
         container_name: express-app
         ports:
             - "3000:3000"
         depends_on:
             - redis
             - mongodb
+            - mysql
 
     mongodb:
         image: mongo:6.0
@@ -19,7 +22,7 @@ services:
             - mongodb_data:/data/db
         environment:
             MONGO_INITDB_ROOT_USERNAME: root
-            MONGO_INITDB_ROOT_PASSWORD: example
+            MONGO_INITDB_ROOT_PASSWORD: 123456
 
     redis:
         image: redis:7.0
@@ -36,12 +39,14 @@ services:
         ports:
             - "3306:3306"
         environment:
-            MYSQL_ROOT_PASSWORD: rootpassword
-            MYSQL_DATABASE: mydb
-            MYSQL_USER: myuser
-            MYSQL_PASSWORD: mypassword
+            - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+#            MYSQL_ROOT_PASSWORD: 123456
+#            MYSQL_DATABASE: devel
+#            MYSQL_USER: sa
+#            MYSQL_PASSWORD: 123456
         volumes:
-            - mysql_data:/var/lib/mysql
+            - "mysql_data:/var/lib/mysql"
+            - "./scripts/db_scripts.sql:/docker-entrypoint-initdb.d/init-script.sql"
 
 volumes:
     mongodb_data:

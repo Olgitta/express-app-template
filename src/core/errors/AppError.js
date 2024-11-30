@@ -1,4 +1,4 @@
-class RedisClientError extends Error {
+class AppError extends Error {
     constructor(message, code) {
         super(message);
         this.code = code;
@@ -7,4 +7,4 @@ class RedisClientError extends Error {
     }
 }
 
-module.exports = RedisClientError;
+module.exports = AppError;

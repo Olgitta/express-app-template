@@ -1,9 +1,13 @@
-module.exports = async function getRedisClient(config) {
+'use strict';
 
-    const redis = require('redis');
-    const appLogger = require('../../logger/appLogger');
-    const RedisClientError = require("./RedisClientError");
-    const configSchema = require('./configSchema');
+const redis = require('redis');
+const appLogger = require('../../logger/appLogger');
+const configSchema = require('./configSchema');
+const AppError = require("../../errors/AppError");
+
+let client = null;
+
+module.exports.setup = async (config) => {
 
     const { error, value } = configSchema.validate(config || {});
 
@@ -11,13 +15,13 @@ module.exports = async function getRedisClient(config) {
         throw new Error('Redis configuration validation error');
     }
 
-    const client = redis.createClient({
+    client = redis.createClient({
         url: config.url,
         socket: {
             reconnectStrategy: (retries) => {
                 if (retries >= config.reconnectStrategy.maxRetries) {
                     appLogger.info(`Max retries reached: ${config.reconnectStrategy.maxRetries}`);
-                    throw new RedisClientError('Max retries reached', 'MAXRETRYREACHED');
+                    throw new AppError('Max retries reached', 'MAXRETRYREACHED');
                 }
 
                 const jitter = Math.floor(Math.random() * 200);
@@ -37,7 +41,7 @@ module.exports = async function getRedisClient(config) {
 
     await client.connect();
 
-    appLogger.info('Redis connection opened', value);
+    appLogger.info('Redis connection established', value);
 
     const gracefulShutdown = async () => {
         appLogger.info('Closing Redis connection...');
@@ -45,8 +49,6 @@ module.exports = async function getRedisClient(config) {
         appLogger.info('Redis connection closed');
     };
 
-    process.on('SIGINT', gracefulShutdown);  // Handle Ctrl+C
-    process.on('SIGTERM', gracefulShutdown); // Handle process termination
+    process.on('SIGINT', gracefulShutdown);
 
-    return client;
 }
