@@ -43,3 +43,15 @@ module.exports.setup = async (config) => {
     process.on('SIGINT', gracefulShutdown);
 
 }
+
+module.exports.getMongoClient = () => {
+    if(client === null) {
+        throw new Error('MongoDB client does not initialized');
+    }
+
+    return {
+        ping: async () => {
+            return await client.db("devel").command({ ping: 1 });
+        }
+    }
+}

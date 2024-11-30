@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
-const appLogger = require("../../logger/appLogger");
-const configSchema = require("./configSchema");
+const appLogger = require('../../logger/appLogger');
+const configSchema = require('./configSchema');
 
 let pool = null;
 
@@ -49,7 +49,18 @@ module.exports.setup = async (config) => {
 
 };
 
+module.exports.getMySqlClient = () => {
+    if (pool === null) {
+        throw new Error('MySqlClient not initialized.');
+    }
 
+    return {
+        ping: async () => {
+            const connection = await pool.getConnection();
+            connection.release();
+        },
+    }
+}
 // // Create a connection
 // const connection = mysql.createConnection({
 //     host: 'localhost', // Replace with your MySQL server host
