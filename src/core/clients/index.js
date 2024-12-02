@@ -7,7 +7,7 @@ module.exports = async function setupClients(appConfig) {
     }
 
     if(appConfig.mongoIsOn) {
-        await require('./mongodb-client/mongodbClient').setup(appConfig.mongo);
+        await require('./mongodb-client/mongodbClient').setup(appConfig.mongodb);
     }
 
     if(appConfig.mysqlIsOn) {

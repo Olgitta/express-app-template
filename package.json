@@ -7,13 +7,14 @@
     "dev": "cross-env NODE_ENV=development node bin/server.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "express": "5.0.0",
+    "http-status-codes": "^2.3.0",
     "joi": "^17.13.3",
     "mongodb": "^6.11.0",
     "morgan": "~1.9.1",

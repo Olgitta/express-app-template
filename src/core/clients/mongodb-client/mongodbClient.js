@@ -1,14 +1,22 @@
 'use strict';
 
-const { MongoClient } = require('mongodb');
+const {MongoClient} = require('mongodb');
 const appLogger = require('../../logger/appLogger');
 const configSchema = require('./configSchema');
 
 let client = null;
 
+module.exports.getMongoClient = () => {
+    if (client === null) {
+        throw new Error('MongoDbClient not initialized.');
+    }
+
+    return client;
+}
+
 module.exports.setup = async (config) => {
 
-    const { error, value } = configSchema.validate(config || {});
+    const {error, value} = configSchema.validate(config || {});
 
     if (error) {
         throw new Error('MongoDb configuration validation error');
@@ -21,7 +29,9 @@ module.exports.setup = async (config) => {
         serverSelectionTimeoutMS: 5000, // Wait up to 5 seconds for a server
     });
 
-    client.on('error', (e) => appLogger.error('Mongo Client error', e));
+    client.on('error', (e) => {
+        appLogger.error('Mongo Client error', e)
+    });
     // client.on('serverClosed', () => appLogger.info('MongoDb Server closed'));
     // client.on('serverDescriptionChanged', event => appLogger.info('MongoDb Server changed:', event));
     // client.on('serverHeartbeatFailed', error => appLogger.error('MongoDb Heartbeat failed:', error));
@@ -41,17 +51,6 @@ module.exports.setup = async (config) => {
     };
 
     process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
 
-}
-
-module.exports.getMongoClient = () => {
-    if(client === null) {
-        throw new Error('MongoDB client does not initialized');
-    }
-
-    return {
-        ping: async () => {
-            return await client.db("devel").command({ ping: 1 });
-        }
-    }
 }

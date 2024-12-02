@@ -23,7 +23,7 @@ const setupAppConfig = () => {
         },
 
         mongoIsOn: toBoolean(process.env.MONGODB_ON),
-        mongo: {
+        mongodb: {
             url: process.env.MONGODB_URL,
         },
 

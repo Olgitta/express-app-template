@@ -4,9 +4,22 @@ const configSchema = require('./configSchema');
 
 let pool = null;
 
+module.exports.getMySqlClient = () => {
+    if (pool === null) {
+        throw new Error('MySqlClient not initialized.');
+    }
+
+    return {
+        ping: async () => {
+            const connection = await pool.getConnection();
+            connection.release();
+        },
+    }
+};
+
 module.exports.setup = async (config) => {
 
-    const { error, value } = configSchema.validate(config || {});
+    const {error, value} = configSchema.validate(config || {});
 
     if (error) {
         throw new Error('MySql configuration validation error');
@@ -30,14 +43,10 @@ module.exports.setup = async (config) => {
         appLogger.error('onerror event fired', err);
     });
 
-    try {
-        const connection = await pool.getConnection();
-        appLogger.info('MySql connection established', value);
-        connection.release();
-    } catch (err) {
-        appLogger.error('MySql connection failed', err);
-        throw err;
-    }
+    pool.on('connection', (connection) => appLogger.info('MySql pool:on connection'));
+    pool.on('acquire', (connection) => appLogger.info('MySql pool:on acquire'));
+    pool.on('release', (connection) => appLogger.info('MySql pool:on release'));
+    pool.on('enqueue', () => appLogger.info('MySql pool:on enqueue'));
 
     const gracefulShutdown = async () => {
         appLogger.info('Closing MySql pool...');
@@ -46,21 +55,10 @@ module.exports.setup = async (config) => {
     };
 
     process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
 
 };
 
-module.exports.getMySqlClient = () => {
-    if (pool === null) {
-        throw new Error('MySqlClient not initialized.');
-    }
-
-    return {
-        ping: async () => {
-            const connection = await pool.getConnection();
-            connection.release();
-        },
-    }
-}
 // // Create a connection
 // const connection = mysql.createConnection({
 //     host: 'localhost', // Replace with your MySQL server host

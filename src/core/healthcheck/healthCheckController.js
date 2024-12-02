@@ -1,8 +1,6 @@
 'use strict';
 
 const appLogger = require('../logger/appLogger');
-const ResponseBuilder = require('../response-builder/ResponseBuilder');
-const {getTransactionId} = require('../execution-context/executionContextUtil');
 const {getMySqlClient} = require('../clients/mysql-client/mysqlClient');
 const {getRedisClient} = require('../clients/redis-client/redisClient');
 const {getMongoClient} = require('../clients/mongodb-client/mongodbClient');
@@ -36,7 +34,7 @@ class HealthCheckController {
             await mySqlClient.ping();
             clients.mysql = 'OK';
         } catch (e) {
-            appLogger.error('healthCheckController', e);
+            appLogger.error(`HealthCheckController error: ${e.message}`, e);
             clients.mysql = 'ERROR';
         }
 
@@ -45,24 +43,26 @@ class HealthCheckController {
             await redisClient.ping();
             clients.redis = 'OK';
         } catch (e) {
-            appLogger.error('healthCheckController', e);
+            appLogger.error(`HealthCheckController error: ${e.message}`, e);
             clients.redis = 'ERROR';
         }
 
         try {
             const mongoClient = getMongoClient();
-            await mongoClient.ping();
+            // await mongoClient.ping();
+            // todo:
+            // return {
+            //     ping: async () => {
+            //         return await client.db("devel").command({ping: 1});
+            //     },
+            // }
             clients.mongodb = 'OK';
         } catch (e) {
-            appLogger.error('healthCheckController', e);
+            appLogger.error(`HealthCheckController error: ${e.message}`, e);
             clients.mongodb = 'ERROR';
         }
 
-        return new ResponseBuilder()
-            .setData({processListeners, clients})
-            .setMessage('OK')
-            .setTransactionId(getTransactionId())
-            .build();
+        return {processListeners, clients};
     }
 
 }

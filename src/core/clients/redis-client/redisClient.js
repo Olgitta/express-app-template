@@ -6,6 +6,19 @@ const configSchema = require('./configSchema');
 
 let client = null;
 
+module.exports.getRedisClient = () => {
+    if(client === null) {
+        throw new Error('RedisClient not initialized.');
+    }
+
+    return {
+        ping: async () => {
+            return await client.ping();
+        }
+    }
+
+};
+
 module.exports.setup = async (config) => {
 
     const { error, value } = configSchema.validate(config || {});
@@ -18,28 +31,48 @@ module.exports.setup = async (config) => {
         url: config.url,
         socket: {
             reconnectStrategy: (retries) => {
-                // if (retries >= config.reconnectStrategy.maxRetries) {
-                //     appLogger.info(`Redis Max retries reached: ${config.reconnectStrategy.maxRetries}`);
-                //     throw new Error('Redis Max retries reached');
-                // }
+                if (retries >= config.reconnectStrategy.maxRetries) {
+                    appLogger.error(`Redis Max retries reached: ${config.reconnectStrategy.maxRetries}`);
+                    return false;
+                }
                 /*
                 This ensures that the delay never exceeds 3000ms (or 3 seconds),
                 no matter how many retry attempts have been made.
                 So the first few retries will have delays of 100ms, 200ms, 300ms, etc.,
                 but the delay will be capped at 3 seconds after a certain number of retries.
                  */
-                return Math.min(retries * 100, 5000);
+                return Math.min(retries * 100, 3000);
             },
         },
     });
 
+    // client.on('connect', () => {
+    //     appLogger.info(`Redis Client connection started: ${client.isOpen}`);
+    // });
+    //
+    // client.on('ready', () => {
+    //     appLogger.info(`Redis Client connection ready: ${client.isReady}`);
+    // });
+
     client.on('error', (err) => {
-        appLogger.error(`Redis Error: ${err.message}`, err);
+
+        // appLogger.info(`onerror: Redis Client isOpen: ${client.isOpen}`);
+        // appLogger.info(`onerror: Redis Client isReady: ${client.isReady}`);
+
+        if(err.message) {
+            appLogger.error(`Redis Error: ${err.message}`);
+        } else if (err.errors && Array.isArray(err.errors)) {
+            for(let e of err.errors) {
+                appLogger.error(`Redis Error: ${e.message}`);
+            }
+        } else {
+            appLogger.error('Redis Error');
+        }
     });
 
-    client.on('reconnecting', () => {
-        appLogger.info('Redis client attempting to reconnect...');
-    });
+    // client.on('reconnecting', () => {
+    //     appLogger.info('Redis client attempting to reconnect...');
+    // });
 
     await client.connect();
 
@@ -52,24 +85,6 @@ module.exports.setup = async (config) => {
     };
 
     process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
 
-}
-
-module.exports.getRedisClient = () => {
-    if(client == null) {
-        throw new Error('RedisClient not initialized.');
-    }
-
-    return {
-        ping: async () => {
-            return Promise.race([
-                client.ping(),
-                new Promise((resolve, reject) => {
-                    setTimeout(() => reject(new Error("Ping timed out")), 5000);
-                }),
-            ]);
-            // return await client.ping();
-        }
-    }
-
-}
+};

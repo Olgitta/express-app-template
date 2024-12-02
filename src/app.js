@@ -23,8 +23,11 @@ module.exports = async function initializeApp() {
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-        appLogger.error('Unhandled Rejection:', reason, promise);
-        process.exit(1);
+        appLogger.error(`Unhandled Rejection: ${reason.message}`);
+        // if(promise instanceof Promise) {
+        //     promise.catch(e => appLogger.error(e));
+        // }
+        // process.exit(1);
     });
 
     if (process.env.NODE_ENV !== 'production') {
