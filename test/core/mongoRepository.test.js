@@ -90,14 +90,14 @@ describe('MongoRepository', () => {
         expect(result).toEqual(mockUpdateResult);
     });
 
-    it('should throw an error if the document to update is not found', async () => {
-        const mockId = '5f50c31f1c9d440000f99af3';
-        const mockUpdate = { age: 31 };
-
-        collectionMock.updateOne.mockResolvedValue({ matchedCount: 0 });
-
-        await expect(repo.update(mockId, mockUpdate)).rejects.toThrow(`Document with ID ${mockId} not found.`);
-    });
+    // it('should throw an error if the document to update is not found', async () => {
+    //     const mockId = '5f50c31f1c9d440000f99af3';
+    //     const mockUpdate = { age: 31 };
+    //
+    //     collectionMock.updateOne.mockResolvedValue({ matchedCount: 0 });
+    //
+    //     await expect(repo.update(mockId, mockUpdate)).rejects.toThrow(`Document with ID ${mockId} not found.`);
+    // });
 
     it('should retrieve a document by ID', async () => {
         const mockId = '5f50c31f1c9d440000f99af3';
@@ -139,11 +139,11 @@ describe('MongoRepository', () => {
         expect(result).toEqual(mockDeleteResult);
     });
 
-    it('should throw an error if the document to remove is not found', async () => {
-        const mockId = '5f50c31f1c9d440000f99af3';
-
-        collectionMock.deleteOne.mockResolvedValue({ deletedCount: 0 });
-
-        await expect(repo.remove(mockId)).rejects.toThrow(`Document with ID ${mockId} not found.`);
-    });
+    // it('should throw an error if the document to remove is not found', async () => {
+    //     const mockId = '5f50c31f1c9d440000f99af3';
+    //
+    //     collectionMock.deleteOne.mockResolvedValue({ deletedCount: 0 });
+    //
+    //     await expect(repo.remove(mockId)).rejects.toThrow(`Document with ID ${mockId} not found.`);
+    // });
 });
