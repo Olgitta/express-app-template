@@ -29,6 +29,178 @@
           }
         }
       }
+    },
+    "/api/v1/todos": {
+      "post": {
+        "summary": "Create a new todo",
+        "operationId": "createTodo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the todo",
+                    "example": "The title of the todo"
+                  },
+                  "completed": {
+                    "type": "boolean",
+                    "description": "Status indicating whether the todo is completed",
+                    "example": false
+                  }
+                },
+                "required": [
+                  "title",
+                  "completed"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all todos",
+        "operationId": "getAllTodos",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/todos/{id}": {
+      "get": {
+        "summary": "Get todo",
+        "operationId": "getTodo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the todo to get",
+            "schema": {
+              "type": "string",
+              "example": "675191b38a546d071d68edf9"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an existing todo",
+        "operationId": "updateTodo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the todo to update",
+            "schema": {
+              "type": "string",
+              "example": "675191b38a546d071d68edf9"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The updated title of the todo",
+                    "example": "updated"
+                  },
+                  "completed": {
+                    "type": "boolean",
+                    "description": "Status indicating whether the todo is completed",
+                    "example": true
+                  }
+                },
+                "required": [
+                  "title",
+                  "completed"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rs"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete todo",
+        "operationId": "deleteTodo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the todo to delete",
+            "schema": {
+              "type": "string",
+              "example": "675191b38a546d071d68edf9"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rs"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -44,6 +216,14 @@
               },
               "message": {
                 "type": "string"
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "number"
+                  }
+                }
               }
             }
           },

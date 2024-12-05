@@ -5,7 +5,7 @@ require('dotenv').config({
 });
 
 const {toBoolean} = require('../core/utils/conversions');
-const appLogger = require("../core/logger/appLogger");
+const appLogger = require('../core/logger/appLogger');
 
 let appConfig = null;
 
@@ -33,10 +33,17 @@ const setupAppConfig = () => {
             user: process.env.MYSQL_USER,
             password: process.env.MYSQL_PASSWORD,
             database: process.env.MYSQL_DATABASE,
+        },
+
+        todos: {
+            mongodb: {
+                name: process.env.DOMAIN_TODOS_MONGODB_DB_NAME,
+                whitelistedCollections: process.env.DOMAIN_TODOS_MONGODB_WHITELISTED_COLLECTIONS.split(','),
+            }
         }
     };
 
-    appLogger.info('AppConfig loaded :', appConfig);
+    appLogger.info('AppConfig loaded.', appConfig);
 };
 
 module.exports.getAppConfig = () => {

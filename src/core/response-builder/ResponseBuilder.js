@@ -6,6 +6,7 @@ class ResponseBuilder {
             metadata: {
                 transactionId: '',
                 message: '',
+                // error: ''    // optional
             },
         };
     }
@@ -29,6 +30,25 @@ class ResponseBuilder {
         this.response.metadata.message = message;
         return this;
     }
+
+    /**
+     *
+     * @param error
+     * @returns {ResponseBuilder}
+     */
+    setError(error) {
+        if (!error) {
+            return this;
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            this.response.metadata.error = {
+                code: error.code,
+            };
+        }
+
+        return this;
+    }
+
 
     /**
      * Set the data for the response

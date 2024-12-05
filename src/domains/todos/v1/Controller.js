@@ -6,9 +6,9 @@ const {StatusCodes, ReasonPhrases} = require('http-status-codes');
 const TodoBuilder = require('./TodoBuilder');
 const {isValidNonEmptyString, isBoolean} = require('../../../core/utils/validators');
 const {getAppConfig} = require('../../../config/appConfig');
-const {validateConfig} = require("./configSchema");
+const {validateConfig} = require('./configSchema');
 const consts = require('./consts');
-const {TodoError, errorCode} = require("../TodoError");
+const {TodoError, errorCode} = require('../TodoError');
 
 let controller = null;
 

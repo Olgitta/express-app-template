@@ -5,7 +5,7 @@ const setupRoutes = require('./routes');
 const executionContextMiddleware = require('./core/execution-context/executionContextMiddleware');
 const appConfig = require('./config/appConfig').getAppConfig();
 const setupClients = require('./core/clients/index');
-const appLogger = require("./core/logger/appLogger");
+const appLogger = require('./core/logger/appLogger');
 
 module.exports = async function initializeApp() {
 
@@ -37,8 +37,8 @@ module.exports = async function initializeApp() {
     app.use(express.json());
     app.use(express.urlencoded({extended: false}));
     app.use(cookieParser());
-
     app.use(executionContextMiddleware);
+
     setupRoutes(app);
 
 // // catch 404 and forward to error handler

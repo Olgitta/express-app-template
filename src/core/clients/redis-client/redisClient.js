@@ -60,13 +60,13 @@ module.exports.setup = async (config) => {
         // appLogger.info(`onerror: Redis Client isReady: ${client.isReady}`);
 
         if(err.message) {
-            appLogger.error(`Redis Error: ${err.message}`);
+            appLogger.error(`Redis Error: ${err.message}`, err);
         } else if (err.errors && Array.isArray(err.errors)) {
-            for(let e of err.errors) {
-                appLogger.error(`Redis Error: ${e.message}`);
+            for(const e of err.errors) {
+                appLogger.error(`Redis Error: ${e.message}`, e);
             }
         } else {
-            appLogger.error('Redis Error');
+            appLogger.error('Redis Error', err);
         }
     });
 

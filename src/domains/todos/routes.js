@@ -1,5 +1,5 @@
-const router = require('./v1/router');
+'use strict';
 
 module.exports = {
-    v1: async () => await router(),
+    v1: require('./v1/router')
 };

@@ -1,11 +1,11 @@
 const async_hooks = require('node:async_hooks');
 const {v4: uuidv4} = require('uuid');
 
-let ctx = new Map();
+const ctx = new Map();
 
 async_hooks.createHook({
     init: function (id, type, triggerAsyncId) {
-        let triggeredData = ctx.get(triggerAsyncId);
+        const triggeredData = ctx.get(triggerAsyncId);
         if (triggeredData) {
             ctx.set(id, triggeredData);
         }
@@ -17,7 +17,7 @@ async_hooks.createHook({
 
 
 module.exports.createCtx = (payload) => {
-    let trxId = uuidv4();
+    const trxId = uuidv4();
 
     ctx.set(async_hooks.executionAsyncId(), {...payload, trxId});
 };

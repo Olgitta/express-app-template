@@ -1,4 +1,6 @@
-const { MongoClient } = require('mongodb');
+'use strict';
+
+const { MongoClient, ObjectId } = require('mongodb');
 const {MongoRepository, getMongoDbRepository} = require('../../src/core/clients/mongodb-client/mongodbRepositoryFactory');
 
 jest.mock('mongodb', () => {
@@ -12,7 +14,7 @@ jest.mock('mongodb', () => {
 
     const mDb = {
         listCollections: jest.fn(() => ({
-            toArray: jest.fn(() => [{ name: 'testcollection' }]),
+            toArray: jest.fn(() => [{ name: 'todos' }]),
         })),
         collection: jest.fn(() => mCollection),
     };
@@ -30,7 +32,7 @@ jest.mock('mongodb', () => {
 });
 
 describe('MongoRepository', () => {
-    let repo;
+    let repository;
     let dbMock;
     let collectionMock;
 
@@ -39,111 +41,132 @@ describe('MongoRepository', () => {
         const db = client.db('testdb');
         dbMock = db;
         collectionMock = db.collection();
-        repo = new MongoRepository(db, 'testcollection');
-        await repo.initialize();
+        repository = new MongoRepository(db, 'todos');
+        // repository = getMongoDbRepository('testdb', 'todos');
+        await repository.initialize();
     });
 
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-    it('should initialize and validate the collection exists', async () => {
-        expect(dbMock.listCollections).toHaveBeenCalledWith({}, { nameOnly: true });
-        expect(dbMock.collection).toHaveBeenCalledWith('testcollection');
-    });
-
-    it('should throw an error if the collection does not exist', async () => {
+    test('should throw an error if the collection does not exist', async () => {
         dbMock.listCollections.mockReturnValueOnce({
-            toArray: jest.fn(() => []), // Simulate no collections found
+            toArray: jest.fn().mockResolvedValue([]),
         });
 
-        await expect(repo.initialize()).rejects.toThrow('Collection "testcollection" does not exist in the database.');
+        await expect(repository.initialize()).rejects.toThrow(
+            'Collection "todos" does not exist in the database.'
+        );
     });
 
-    it('should insert a document and return the result', async () => {
-        const mockDocument = { name: 'John Doe', age: 30 };
-        const mockInsertResult = {
-            "acknowledged": true,
-            "insertedId": "674dc2251dfd95ec1d8d3eb6"
-        };
-        collectionMock.insertOne.mockResolvedValue(mockInsertResult);
-
-        const result = await repo.insert(mockDocument);
-
-        expect(collectionMock.insertOne).toHaveBeenCalledWith(mockDocument);
-        expect(result).toEqual(mockInsertResult);
+    test('should initialize successfully if the collection exists', async () => {
+        await repository.initialize();
+        expect(dbMock.collection).toHaveBeenCalledWith('todos');
+        expect(repository.collection).toBe(collectionMock);
     });
 
-    it('should update a document by ID', async () => {
-        const mockId = '5f50c31f1c9d440000f99af3';
-        const mockUpdate = { age: 31 };
-        const mockUpdateResult = { matchedCount: 1 };
+    test('should insert a document into the collection', async () => {
+        const document = { title: 'Test Todo', completed: false };
+        collectionMock.insertOne.mockResolvedValue({ acknowledged: true, insertedId: '674ebcbd7494e89c198ff00f' });
 
-        collectionMock.updateOne.mockResolvedValue(mockUpdateResult);
+        const result = await repository.insert(document);
 
-        const result = await repo.update(mockId, mockUpdate);
+        expect(collectionMock.insertOne).toHaveBeenCalledWith(document);
+        expect(result).toEqual({ acknowledged: true, insertedId: '674ebcbd7494e89c198ff00f' });
+    });
+
+    test('should insert a document with timestamps', async () => {
+        const document = { title: 'Test Todo', completed: false };
+        const now = new Date();
+        jest.spyOn(global, 'Date').mockImplementation(() => now);
+
+        collectionMock.insertOne.mockResolvedValue({ acknowledged: true, insertedId: '674ebcbd7494e89c198ff00f' });
+
+        const result = await repository.insertWithTimestamps(document);
+
+        expect(collectionMock.insertOne).toHaveBeenCalledWith({
+            ...document,
+            createdAt: now,
+            updatedAt: now,
+        });
+        expect(result).toEqual({ acknowledged: true, insertedId: '674ebcbd7494e89c198ff00f' });
+
+        jest.restoreAllMocks();
+    });
+
+    test('should update a document in the collection', async () => {
+        const id = '674ebcbd7494e89c198ff00f';
+        const update = { title: 'Updated Todo' };
+
+        collectionMock.updateOne.mockResolvedValue({ acknowledged: true, matchedCount: 1 });
+
+        const result = await repository.update(id, update);
 
         expect(collectionMock.updateOne).toHaveBeenCalledWith(
-            { _id: expect.any(Object) },
-            { $set: mockUpdate }
+            { _id: new ObjectId(id) },
+            { $set: update }
         );
-        expect(result).toEqual(mockUpdateResult);
+        expect(result).toEqual({ acknowledged: true, matchedCount: 1 });
     });
 
-    // it('should throw an error if the document to update is not found', async () => {
-    //     const mockId = '5f50c31f1c9d440000f99af3';
-    //     const mockUpdate = { age: 31 };
-    //
-    //     collectionMock.updateOne.mockResolvedValue({ matchedCount: 0 });
-    //
-    //     await expect(repo.update(mockId, mockUpdate)).rejects.toThrow(`Document with ID ${mockId} not found.`);
-    // });
+    test('should update a document with timestamps', async () => {
+        const id = '674ebcbd7494e89c198ff00f';
+        const update = { title: 'Updated Todo' };
+        const now = new Date();
+        jest.spyOn(global, 'Date').mockImplementation(() => now);
 
-    it('should retrieve a document by ID', async () => {
-        const mockId = '5f50c31f1c9d440000f99af3';
-        const mockDocument = { _id: mockId, name: 'John Doe', age: 30 };
+        collectionMock.updateOne.mockResolvedValue({ acknowledged: true, matchedCount: 1 });
 
-        collectionMock.findOne.mockResolvedValue(mockDocument);
+        const result = await repository.updateWithTimestamps(id, update);
 
-        const result = await repo.getById(mockId);
+        expect(collectionMock.updateOne).toHaveBeenCalledWith(
+            { _id: new ObjectId(id) },
+            { $set: { ...update, updatedAt: now } }
+        );
+        expect(result).toEqual({ acknowledged: true, matchedCount: 1 });
 
-        expect(collectionMock.findOne).toHaveBeenCalledWith({ _id: expect.any(Object) });
-        expect(result).toEqual(mockDocument);
+        jest.restoreAllMocks();
     });
 
-    it('should retrieve all documents from the collection', async () => {
-        const mockDocuments = [
-            { _id: '1', name: 'Alice' },
-            { _id: '2', name: 'Bob' },
+    test('should get a document by ID', async () => {
+        const id = '674ebcbd7494e89c198ff00f';
+        const document = { _id: id, title: 'Test Todo' };
+
+        collectionMock.findOne.mockResolvedValue(document);
+
+        const result = await repository.getById(id);
+
+        expect(collectionMock.findOne).toHaveBeenCalledWith({ _id: new ObjectId(id) });
+        expect(result).toEqual(document);
+    });
+
+    test('should get all documents from the collection', async () => {
+        const documents = [
+            { _id: 'id1', title: 'Test Todo 1' },
+            { _id: 'id2', title: 'Test Todo 2' },
         ];
-        // collectionMock.find().toArray.mockResolvedValue(mockDocuments);
+
+        // collectionMock.find().toArray.mockResolvedValue(documents);
+
         collectionMock.find.mockReturnValue({
-            toArray: jest.fn().mockResolvedValue(mockDocuments),
+            toArray: jest.fn().mockResolvedValue(documents),
         });
 
-        const result = await repo.getAll();
+        const result = await repository.getAll();
 
         expect(collectionMock.find).toHaveBeenCalledWith({});
-        expect(result).toEqual(mockDocuments);
+        expect(result).toEqual(documents);
     });
 
-    it('should remove a document by ID', async () => {
-        const mockId = '5f50c31f1c9d440000f99af3';
-        const mockDeleteResult = { deletedCount: 1 };
+    test('should remove a document by ID', async () => {
+        const id = '674ebcbd7494e89c198ff00f';
 
-        collectionMock.deleteOne.mockResolvedValue(mockDeleteResult);
+        collectionMock.deleteOne.mockResolvedValue({ acknowledged: true, deletedCount: 1 });
 
-        const result = await repo.remove(mockId);
+        const result = await repository.remove(id);
 
-        expect(collectionMock.deleteOne).toHaveBeenCalledWith({ _id: expect.any(Object) });
-        expect(result).toEqual(mockDeleteResult);
+        expect(collectionMock.deleteOne).toHaveBeenCalledWith({ _id: new ObjectId(id) });
+        expect(result).toEqual({ acknowledged: true, deletedCount: 1 });
     });
-
-    // it('should throw an error if the document to remove is not found', async () => {
-    //     const mockId = '5f50c31f1c9d440000f99af3';
-    //
-    //     collectionMock.deleteOne.mockResolvedValue({ deletedCount: 0 });
-    //
-    //     await expect(repo.remove(mockId)).rejects.toThrow(`Document with ID ${mockId} not found.`);
-    // });
 });

@@ -1,6 +1,8 @@
 const {ObjectId} = require('mongodb');
 const {getMongoClient} = require('./mongodbClient');
-const {isStringEmpty} = require('../../utils/validators');
+const {isValidNonEmptyString} = require('../../utils/validators');
+
+const repositoryCache = {};
 
 class MongoRepository {
     /**
@@ -52,20 +54,31 @@ class MongoRepository {
     }
 
     /**
-     * Updates a document in the collection by ID.
-     * @param {string} id - The ID of the document to update.
-     * @param {object} update - The update object.
-     * @returns {Promise<object>} The result of the update operation.
+     *
+     * @param id
+     * @param update
+     * @returns {Promise<*>}
      */
     async update(id, update) {
-        const result = await this.collection.updateOne(
+        return await this.collection.updateOne(
             {_id: new ObjectId(id)},
             {$set: update}
         );
-        if (result.matchedCount === 0) {
-            throw new Error(`Document with ID ${id} not found.`);
-        }
-        return result;
+    }
+
+    /**
+     *
+     * @param id
+     * @param update
+     * @returns {Promise<*>}
+     */
+    async updateWithTimestamps(id, update) {
+        update.updatedAt = new Date();
+
+        return await this.collection.updateOne(
+            {_id: new ObjectId(id)},
+            {$set: update}
+        );
     }
 
     /**
@@ -91,11 +104,7 @@ class MongoRepository {
      * @returns {Promise<object>} The result of the delete operation.
      */
     async remove(id) {
-        const result = await this.collection.deleteOne({_id: new ObjectId(id)});
-        if (result.deletedCount === 0) {
-            throw new Error(`Document with ID ${id} not found.`);
-        }
-        return result;
+        return await this.collection.deleteOne({_id: new ObjectId(id)});
     }
 }
 
@@ -103,19 +112,26 @@ module.exports.MongoRepository = MongoRepository;
 
 module.exports.getMongoDbRepository = async function (dbName, collectionName) {
 
-    if (isStringEmpty(dbName)) {
-        throw new TypeError('Provide valid dbName');
+    if (!isValidNonEmptyString(dbName)) {
+        throw new Error('Provide valid dbName');
     }
 
-    if (isStringEmpty(collectionName)) {
-        throw new TypeError('Provide valid collectionName');
+    if (!isValidNonEmptyString(collectionName)) {
+        throw new Error('Provide valid collectionName');
+    }
+
+    const cacheKey = `${dbName}-${collectionName}`;
+
+    if (repositoryCache[cacheKey]) {
+        return repositoryCache[cacheKey];
     }
 
     const client = getMongoClient();
-
     const db = client.db(dbName);
     const repo = new MongoRepository(db, collectionName);
     await repo.initialize();
+
+    repositoryCache[cacheKey] = repo;
 
     return repo;
 };

@@ -18,14 +18,15 @@ const logger = createLogger({
 });
 
 const appLogger = {
-    info(message, ...args) {
-        logger.info(message, Object.assign({}, ...args, getCtx()));
+    info(msg, ...args) {
+        logger.info(msg, Object.assign({}, ...args, getCtx()));
     },
-    debug(message, ...args) {
-        logger.debug(message, Object.assign({}, ...args, getCtx()));
+    debug(msg, ...args) {
+        logger.debug(msg, Object.assign({}, ...args, getCtx()));
     },
-    error(message, ...args) {
-        logger.error(message, Object.assign({}, ...args, getCtx()));
+    error(msg, error) {
+        const {message, stack, code} = error;
+        logger.error(msg, error, getCtx());
     }
 };
 

@@ -17,17 +17,17 @@ module.exports = function getHealthCheckController() {
 class HealthCheckController {
 
     async healthCheck() {
-        let sigint = process.listeners('SIGINT').map(listener => {
+        const sigint = process.listeners('SIGINT').map(listener => {
             return listener.name;
         });
 
-        let sigterm = process.listeners('SIGTERM').map(listener => {
+        const sigterm = process.listeners('SIGTERM').map(listener => {
             return listener.name;
         });
 
-        let processListeners = {sigterm, sigint};
+        const processListeners = {sigterm, sigint};
 
-        let clients = {};
+        const clients = {};
 
         try {
             const mySqlClient = getMySqlClient();

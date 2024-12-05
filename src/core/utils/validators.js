@@ -1,6 +1,11 @@
-module.exports.isStringEmpty = function (str) {
-    if (typeof str !== 'string') {
-        throw new TypeError('Input must be a string');
+module.exports.isValidNonEmptyString = function (v) {
+    if (typeof v !== 'string') {
+        return false;
     }
-    return str.trim().length === 0;
+
+    return v.trim().length > 0;
+}
+
+module.exports.isBoolean = function (v) {
+    return typeof v === 'boolean';
 }

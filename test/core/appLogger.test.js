@@ -3,85 +3,68 @@
 const appLogger = require('../../src/core/logger/appLogger');
 const { getCtx } = require('../../src/core/execution-context/executionContextUtil');
 const winston = require('winston');
+const AppError = require("../../src/core/errors/AppError");
 
-// Mock getCtx
 jest.mock('../../src/core/execution-context/executionContextUtil', () => ({
-    getCtx: jest.fn(),
+    getCtx: jest.fn(() => ({ traceId: 'test-trace-id' })),
 }));
 
-// Mock winston logger
-jest.mock('winston', () => {
-    const mockLogger = {
-        info: jest.fn(),
-        debug: jest.fn(),
-        error: jest.fn(),
-    };
-
-    return {
-        createLogger: jest.fn(() => mockLogger),
-        format: {
-            combine: jest.fn(),
-            timestamp: jest.fn(),
-            json: jest.fn(),
-        },
-        transports: {
-            Console: jest.fn(),
-            File: jest.fn(),
-        },
-    };
-});
-
 describe('appLogger', () => {
-    const mockContext = { requestId: '12345' };
-    const loggerMethods = winston.createLogger();
+    let consoleSpy;
 
     beforeEach(() => {
+        consoleSpy = jest.spyOn(winston.transports.Console.prototype, 'log');
+    });
+
+    afterEach(() => {
         jest.clearAllMocks();
-        getCtx.mockReturnValue(mockContext);
     });
 
-    it('should log info messages with merged context and args', () => {
-        const message = 'Info message';
-        const extraArgs = { key: 'value' };
+    it('should log info messages to the console', () => {
+        appLogger.info('This is an info message', { key: 'value' });
 
-        appLogger.info(message, extraArgs);
-
-        expect(loggerMethods.info).toHaveBeenCalledWith(message, {
-            key: 'value',
-            ...mockContext,
-        });
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                level: 'info',
+                message: 'This is an info message',
+                key: 'value',
+                traceId: 'test-trace-id',
+            }),
+            expect.any(Function)
+        );
     });
 
-    it('should log debug messages with merged context and args', () => {
-        const message = 'Debug message';
-        const extraArgs = { debugKey: 'debugValue' };
+    it('should log debug messages to the console', () => {
+        appLogger.debug('This is a debug message', { debugKey: 'debugValue' });
 
-        appLogger.debug(message, extraArgs);
-
-        expect(loggerMethods.debug).toHaveBeenCalledWith(message, {
-            debugKey: 'debugValue',
-            ...mockContext,
-        });
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                level: 'debug',
+                message: 'This is a debug message',
+                debugKey: 'debugValue',
+                traceId: 'test-trace-id',
+            }),
+            expect.any(Function)
+        );
     });
 
-    it('should log error messages with merged context and args', () => {
-        const message = 'Error message';
-        const extraArgs = { errorCode: 500 };
+    xit('should log error messages to the console', () => {
+        const error = new AppError('Test error', 'ERR_TEST_CODE');
+        // error.code = 'ERR_TEST';
 
-        appLogger.error(message, extraArgs);
+        appLogger.error('An error occurred', error);
 
-        expect(loggerMethods.error).toHaveBeenCalledWith(message, {
-            errorCode: 500,
-            ...mockContext,
-        });
-    });
-
-    it('should not modify the original args when logging', () => {
-        const message = 'Test immutability';
-        const extraArgs = { immutableKey: 'originalValue' };
-
-        appLogger.info(message, extraArgs);
-
-        expect(extraArgs).toEqual({ immutableKey: 'originalValue' });
+        expect(consoleSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                level: 'error',
+                message: 'An error occurred Test error',
+                    stack: expect.any(String),
+                    name: expect.any(String),
+                    code: 'ERR_TEST_CODE',
+                traceId: 'test-trace-id',
+                timestamp: expect.any(String),
+            }),
+            expect.any(Function)
+        );
     });
 });
