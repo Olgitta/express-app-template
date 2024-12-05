@@ -1,3 +1,5 @@
+const router = require('./v1/router');
+
 module.exports = {
-    v1: require('./v1/todosRouter'),
-}
+    v1: async () => await router(),
+};
