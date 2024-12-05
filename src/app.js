@@ -39,7 +39,7 @@ module.exports = async function initializeApp() {
     app.use(cookieParser());
     app.use(executionContextMiddleware);
 
-    setupRoutes(app);
+    setupRoutes(app, appConfig);
 
 // // catch 404 and forward to error handler
 // app.use(function(req, res, next) {

@@ -1,9 +1,11 @@
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../api-spec/spec.json');
-const healthcheckRouter = require('../core/healthcheck/healthcheckRouter');
 
-module.exports = function setUpRoutes(app) {
+
+module.exports = function setUpRoutes(app, appConfig) {
     app.use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+    const healthcheckRouter = require('../core/healthcheck/healthcheckRouter')(appConfig);
     app.use('/', healthcheckRouter);
 
     const todosRoutes = require('../domains/todos/routes');

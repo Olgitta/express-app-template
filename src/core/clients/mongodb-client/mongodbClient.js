@@ -5,6 +5,7 @@ const appLogger = require('../../logger/appLogger');
 const configSchema = require('./configSchema');
 
 let client = null;
+let config = null;
 
 module.exports.getMongoClient = () => {
     if (client === null) {
@@ -12,17 +13,30 @@ module.exports.getMongoClient = () => {
     }
 
     return client;
-}
+};
 
-module.exports.setup = async (config) => {
+module.exports.mongoClientHealthcheck = async () => {
+    try {
+        await client.db(config.database).command({ping: 1});
+        return 'mongoClient OK';
+    } catch (e) {
+        appLogger.error(`mongoClientHealthcheck error: ${e.message}`, e);
+        return 'mongoClient ERROR';
+    }
+};
 
+module.exports.setup = async (cfg) => {
+
+    config = cfg;
     const {error, value} = configSchema.validate(config || {});
 
     if (error) {
         throw new Error('MongoDb configuration validation error');
     }
 
-    client = new MongoClient(config.url, {
+    const connectionString = `${config.url}/${config.database}`;
+
+    client = new MongoClient(connectionString, {
         monitorCommands: true,
         maxPoolSize: 10, // Maximum connections
         socketTimeoutMS: 30000, // 30 seconds timeout

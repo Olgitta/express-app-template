@@ -9,13 +9,19 @@ module.exports.getMySqlClient = () => {
         throw new Error('MySqlClient not initialized.');
     }
 
-    return {
-        ping: async () => {
-            const connection = await pool.getConnection();
-            connection.release();
-        },
-    }
+    return pool;
 };
+
+module.exports.mySqlClientHealthcheck = async () => {
+    try {
+        const connection = await pool.getConnection();
+        connection.release();
+        return 'mySqlClient OK';
+    } catch (e) {
+        appLogger.error(`mySqlClientHealthcheck error: ${e.message}`, e);
+        return 'mySqlClient ERROR';
+    }
+}
 
 module.exports.setup = async (config) => {
 

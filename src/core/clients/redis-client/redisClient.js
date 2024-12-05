@@ -11,12 +11,17 @@ module.exports.getRedisClient = () => {
         throw new Error('RedisClient not initialized.');
     }
 
-    return {
-        ping: async () => {
-            return await client.ping();
-        }
-    }
+    return client;
+};
 
+module.exports.redisClientHealthcheck = async () => {
+    try {
+        await client.ping();
+        return 'redisClient OK';
+    } catch (e) {
+        appLogger.error(`redisClientHealthcheck error: ${e.message}`, e);
+        return 'redisClient ERROR';
+    }
 };
 
 module.exports.setup = async (config) => {

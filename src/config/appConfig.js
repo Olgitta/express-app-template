@@ -25,6 +25,7 @@ const setupAppConfig = () => {
         mongoIsOn: toBoolean(process.env.MONGODB_ON),
         mongodb: {
             url: process.env.MONGODB_URL,
+            database: process.env.MONGODB_DATABASE,
         },
 
         mysqlIsOn: toBoolean(process.env.MYSQL_ON),

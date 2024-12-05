@@ -1,23 +1,26 @@
 const express = require('express');
+const {StatusCodes} = require('http-status-codes');
 const ResponseBuilder = require('../response-builder/ResponseBuilder');
 const {getTransactionId} = require('../execution-context/executionContextUtil');
-const healthcheckRouter = express.Router();
-const healthCheckController = require('./healthCheckController')();
 
-healthcheckRouter.get('/healthcheck', async function(req, res, next) {
+module.exports = function(appConfig) {
+    const healthcheckRouter = express.Router();
+    const healthCheckController = require('./healthCheckController')(appConfig);
 
-    try{
-        res.json(new ResponseBuilder()
-            .setData(await healthCheckController.healthCheck())
-            .setMessage('OK')
-            .setTransactionId(getTransactionId())
-            .build());
-    } catch (error) {
-        res.status(500).json(new ResponseBuilder()
-            .setMessage('FAILED')
-            .setTransactionId(getTransactionId())
-            .build());
-    }
-});
+    healthcheckRouter.get('/healthcheck', async function(req, res, next) {
 
-module.exports = healthcheckRouter;
+        try{
+            res.json(new ResponseBuilder()
+                .setData(await healthCheckController.healthCheck())
+                .setMessage('OK')
+                .setTransactionId(getTransactionId())
+                .build());
+        } catch (error) {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(new ResponseBuilder()
+                .setMessage('FAILED')
+                .setTransactionId(getTransactionId())
+                .build());
+        }
+    });
+    return healthcheckRouter;
+};
