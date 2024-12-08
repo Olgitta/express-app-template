@@ -21,7 +21,7 @@ describe('Todo Controller Test', () => {
     let controller;
 
     beforeEach(async () => {
-
+        jest.clearAllMocks();
         mockRepository = {
             getAll: jest.fn(),
             insertWithTimestamps: jest.fn(),
@@ -46,9 +46,9 @@ describe('Todo Controller Test', () => {
 
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
+    // afterEach(() => {
+    //     jest.clearAllMocks();
+    // });
 
     describe('getAll', () => {
 

@@ -1,76 +1,85 @@
 #!/usr/bin/env node
 
+const http = require('http');
 const appConfig = require('../src/config/appConfig').getAppConfig();
 const initializeApp = require('../src/app');
 
-initializeApp()
-    .then((app) => {
+(async () => {
+    try {
+        const app = await initializeApp(appConfig);
         console.log('App is ready');
-        startServer(app);
-    })
-    .catch((error) => {
+        startServer(app, appConfig.port);
+    } catch (error) {
         console.error('Failed to start the app:', error);
         process.exit(1);
-    });
+    }
+})();
 
-function startServer(app) {
-
-    const http = require('http');
-
-    const port = normalizePort(appConfig.port);
-    app.set('port', port);
+function startServer(app, port) {
+    const normalizedPort = normalizePort(port);
+    app.set('port', normalizedPort);
 
     const server = http.createServer(app);
 
-    server.listen(port);
-    server.on('error', onError);
-    server.on('listening', onListening);
+    server.listen(normalizedPort);
+    server.on('error', (error) => onError(error, normalizedPort));
+    server.on('listening', () => onListening(server));
 
-    function normalizePort(val) {
-        const port = parseInt(val, 10);
+    process.on('SIGINT', () => shutdown(server, 'SIGINT'));
+    process.on('SIGTERM', () => shutdown(server, 'SIGTERM'));
+}
 
-        if (isNaN(port)) {
-            // named pipe
-            return val;
-        }
+function normalizePort(val) {
+    const port = parseInt(val, 10);
 
-        if (port >= 0) {
-            // port number
-            return port;
-        }
-
-        return false;
+    if (isNaN(port)) {
+        // named pipe
+        return val;
     }
 
-    function onError(error) {
-        if (error.syscall !== 'listen') {
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+function onError(error, port) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    const bind = typeof port === 'string' ? `Pipe ${port}` : `Port ${port}`;
+
+    switch (error.code) {
+        case 'EACCES':
+            console.error(`${bind} requires elevated privileges`);
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(`${bind} is already in use`);
+            process.exit(1);
+            break;
+        default:
             throw error;
-        }
-
-        const bind = typeof port === 'string'
-            ? 'Pipe ' + port
-            : 'Port ' + port;
-
-        // handle specific listen errors with friendly messages
-        switch (error.code) {
-            case 'EACCES':
-                console.error(bind + ' requires elevated privileges');
-                process.exit(1);
-                break;
-            case 'EADDRINUSE':
-                console.error(bind + ' is already in use');
-                process.exit(1);
-                break;
-            default:
-                throw error;
-        }
     }
+}
 
-    function onListening() {
-        const addr = server.address();
-        const bind = typeof addr === 'string'
-            ? 'pipe ' + addr
-            : 'port ' + addr.port;
-        console.log('Listening on ' + bind);
-    }
+function onListening(server) {
+    const addr = server.address();
+    const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`;
+    console.log(`Listening on ${bind}`);
+}
+
+function shutdown(server, signal) {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    server.close((err) => {
+        if (err) {
+            console.error('Error during server shutdown:', err);
+            process.exit(1);
+        }
+        console.log('Server shut down successfully.');
+        process.exit(0);
+    });
 }

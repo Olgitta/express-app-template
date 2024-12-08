@@ -192,30 +192,15 @@ class Controller {
 
 }
 
-
-module.exports.initializeTodosController = async function () {
-    const config = getAppConfig()?.todos;
-    validateConfig(config);
-
-    if (!config.mongodb.whitelistedCollections.includes(consts.TODOS_COLLECTION_NAME)) {
-        throw new TodoError(`Invalid collection name ${consts.TODOS_COLLECTION_NAME}`);
-    }
-
-    const repository = await getMongoDbRepository(config.mongodb.name, consts.TODOS_COLLECTION_NAME);
-
-    controller = new Controller(repository);
-    return controller;
-};
-
 module.exports.getTodosController = async function () {
     const config = getAppConfig()?.todos;
     validateConfig(config);
 
-    if (!config.mongodb.whitelistedCollections.includes(consts.TODOS_COLLECTION_NAME)) {
-        throw new TodoError(`Invalid collection name ${consts.TODOS_COLLECTION_NAME}`);
-    }
-
-    const repository = await getMongoDbRepository(config.mongodb.name, consts.TODOS_COLLECTION_NAME);
+    const repository = await getMongoDbRepository(config.mongodb.name,
+        consts.TODOS_COLLECTION_NAME,
+        {
+            whitelistedCollections: config.mongodb.whitelistedCollections
+        });
 
     controller = new Controller(repository);
     return controller;

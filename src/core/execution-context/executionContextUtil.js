@@ -17,9 +17,9 @@ async_hooks.createHook({
 
 
 module.exports.createCtx = (payload) => {
-    const trxId = uuidv4();
+    const transactionId = uuidv4();
 
-    ctx.set(async_hooks.executionAsyncId(), {...payload, trxId});
+    ctx.set(async_hooks.executionAsyncId(), {...payload, transactionId});
 };
 
 module.exports.getCtx = () => {
@@ -27,5 +27,5 @@ module.exports.getCtx = () => {
 };
 
 module.exports.getTransactionId = () => {
-    return ctx.get(async_hooks.executionAsyncId()).trxId;
+    return ctx.get(async_hooks.executionAsyncId()).transactionId;
 };

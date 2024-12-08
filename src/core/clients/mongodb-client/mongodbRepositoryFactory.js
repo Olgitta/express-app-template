@@ -1,6 +1,8 @@
 const {ObjectId} = require('mongodb');
 const {getMongoClient} = require('./mongodbClient');
 const {isValidNonEmptyString} = require('../../utils/validators');
+const consts = require("../../../domains/todos/v1/consts");
+const {TodoError} = require("../../../domains/todos/TodoError");
 
 const repositoryCache = {};
 
@@ -110,7 +112,7 @@ class MongoRepository {
 
 module.exports.MongoRepository = MongoRepository;
 
-module.exports.getMongoDbRepository = async function (dbName, collectionName) {
+module.exports.getMongoDbRepository = async function (dbName, collectionName, options = {}) {
 
     if (!isValidNonEmptyString(dbName)) {
         throw new Error('Provide valid dbName');
@@ -118,6 +120,10 @@ module.exports.getMongoDbRepository = async function (dbName, collectionName) {
 
     if (!isValidNonEmptyString(collectionName)) {
         throw new Error('Provide valid collectionName');
+    }
+
+    if (options.whitelistedCollections && !options.whitelistedCollections.includes(collectionName)) {
+        throw new TodoError(`Invalid collection name ${collectionName}`);
     }
 
     const cacheKey = `${dbName}-${collectionName}`;
