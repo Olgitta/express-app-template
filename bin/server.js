@@ -3,6 +3,7 @@
 const http = require('http');
 const appConfig = require('../src/config/appConfig').getAppConfig();
 const initializeApp = require('../src/app');
+const {getShutdownCallbacks} = require('../src/core/utils/shutdownManager');
 
 (async () => {
     try {
@@ -72,8 +73,18 @@ function onListening(server) {
     console.log(`Listening on ${bind}`);
 }
 
-function shutdown(server, signal) {
+async function shutdown(server, signal) {
     console.log(`Received ${signal}. Shutting down gracefully...`);
+
+    try {
+        const shutdownCallbacks = getShutdownCallbacks();
+        for(let cb of shutdownCallbacks) {
+            await cb();
+        }
+    } catch (error) {
+        console.error('Error during shutdown callback call:', error);
+    }
+
     server.close((err) => {
         if (err) {
             console.error('Error during server shutdown:', err);

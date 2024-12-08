@@ -3,11 +3,12 @@
 const redis = require('redis');
 const appLogger = require('../../logger/appLogger');
 const configSchema = require('./configSchema');
+const {registerShutdownCallback} = require('../../utils/shutdownManager');
 
 let client = null;
 
 module.exports.getRedisClient = () => {
-    if(client === null) {
+    if (client === null) {
         throw new Error('RedisClient not initialized.');
     }
 
@@ -26,7 +27,7 @@ module.exports.redisClientHealthcheck = async () => {
 
 module.exports.setup = async (config) => {
 
-    const { error, value } = configSchema.validate(config || {});
+    const {error, value} = configSchema.validate(config || {});
 
     if (error) {
         throw new Error('Redis configuration validation error');
@@ -64,10 +65,10 @@ module.exports.setup = async (config) => {
         // appLogger.info(`onerror: Redis Client isOpen: ${client.isOpen}`);
         // appLogger.info(`onerror: Redis Client isReady: ${client.isReady}`);
 
-        if(err.message) {
+        if (err.message) {
             appLogger.error(`Redis Error: ${err.message}`, err);
         } else if (err.errors && Array.isArray(err.errors)) {
-            for(const e of err.errors) {
+            for (const e of err.errors) {
                 appLogger.error(`Redis Error: ${e.message}`, e);
             }
         } else {
@@ -83,13 +84,14 @@ module.exports.setup = async (config) => {
 
     appLogger.info('Redis connection established', value);
 
-    const gracefulShutdown = async () => {
-        appLogger.info('Closing Redis connection...');
-        await client.quit();
-        appLogger.info('Redis connection closed');
-    };
-
-    process.on('SIGINT', gracefulShutdown);
-    process.on('SIGTERM', gracefulShutdown);
+    registerShutdownCallback(async () => {
+        try {
+            appLogger.info('Closing Redis connection...');
+            await client.quit();
+            appLogger.info('Redis connection closed');
+        } catch (error) {
+            appLogger.error('Error during closing Redis connection', error);
+        }
+    });
 
 };

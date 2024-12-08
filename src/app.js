@@ -21,7 +21,7 @@ module.exports = async function initializeApp(appConfig) {
     });
 
     process.on('uncaughtException', (err, origin) => {
-        appLogger.fatal('Uncaught Exception:', { error: err.message, stack: err.stack });
+        appLogger.error('Uncaught Exception:', { error: err.message, stack: err.stack });
         setTimeout(() => process.exit(0), 5000).unref();
     });
 

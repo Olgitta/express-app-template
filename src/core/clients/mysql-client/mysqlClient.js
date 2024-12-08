@@ -1,6 +1,9 @@
+'use strict';
+
 const mysql = require('mysql2/promise');
 const appLogger = require('../../logger/appLogger');
 const configSchema = require('./configSchema');
+const {registerShutdownCallback} = require('../../utils/shutdownManager');
 
 let pool = null;
 
@@ -54,14 +57,15 @@ module.exports.setup = async (config) => {
     pool.on('release', (connection) => appLogger.info('MySql pool:on release'));
     pool.on('enqueue', () => appLogger.info('MySql pool:on enqueue'));
 
-    const gracefulShutdown = async () => {
-        appLogger.info('Closing MySql pool...');
-        await pool.end();
-        appLogger.info('MySql pool closed');
-    };
-
-    process.on('SIGINT', gracefulShutdown);
-    process.on('SIGTERM', gracefulShutdown);
+    registerShutdownCallback(async () => {
+        try {
+            appLogger.info('Closing MySql pool...');
+            await pool.end();
+            appLogger.info('MySql pool closed');
+        } catch (error) {
+            appLogger.error('Error during closing MySql pool', error);
+        }
+    });
 
 };
 
