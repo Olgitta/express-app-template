@@ -1,8 +1,9 @@
-const {ObjectId} = require('mongodb');
-const {getMongoClient} = require('./mongodbClient');
-const {isValidNonEmptyString} = require('../../utils/validators');
-const consts = require("../../../domains/todos/v1/consts");
-const {TodoError} = require("../../../domains/todos/TodoError");
+'use strict';
+
+const { ObjectId } = require('mongodb');
+const { getMongoClient } = require('./mongodbClient');
+const { isValidNonEmptyString } = require('../../utils/validators');
+const consts = require('../../../domains/todos/v1/consts');
 
 const repositoryCache = {};
 
@@ -24,8 +25,8 @@ class MongoRepository {
      * @returns {Promise<void>}
      */
     async initialize() {
-        const collections = await this.db.listCollections({}, {nameOnly: true}).toArray();
-        const collectionNames = collections.map(c => c.name);
+        const collections = await this.db.listCollections({}, { nameOnly: true }).toArray();
+        const collectionNames = collections.map((c) => c.name);
 
         if (!collectionNames.includes(this.collectionName)) {
             throw new Error(`Collection "${this.collectionName}" does not exist in the database.`);
@@ -35,95 +36,97 @@ class MongoRepository {
     }
 
     /**
-     *
-     * @param document
-     * @returns {Promise<*>}
+     * Inserts a document into the collection.
+     * @param {object} document - The document to insert.
+     * @returns {Promise<object>} The result of the insert operation.
      */
     async insert(document) {
         return await this.collection.insertOne(document);
     }
 
     /**
-     *
-     * @param document
-     * @returns {Promise<*>}
+     * Inserts a document with timestamps into the collection.
+     * @param {object} document - The document to insert.
+     * @returns {Promise<object>} The result of the insert operation.
      */
     async insertWithTimestamps(document) {
         const timestamp = new Date();
-        document.createdAt = timestamp;
-        document.updatedAt = timestamp;
-        return await this.collection.insertOne(document);
+        const docWithTimestamps = { ...document, createdAt: timestamp, updatedAt: timestamp };
+        return await this.insert(docWithTimestamps);
     }
 
     /**
-     *
-     * @param id
-     * @param update
-     * @returns {Promise<*>}
+     * Updates a document by ID.
+     * @param {string} id - The ID of the document to update.
+     * @param {object} update - The update object.
+     * @returns {Promise<object>} The result of the update operation.
      */
     async update(id, update) {
-        return await this.collection.updateOne(
-            {_id: new ObjectId(id)},
-            {$set: update}
-        );
+        if (!ObjectId.isValid(id)) {
+            throw new Error('Invalid ID format.');
+        }
+        return await this.collection.updateOne({ _id: new ObjectId(id) }, { $set: update });
     }
 
     /**
-     *
-     * @param id
-     * @param update
-     * @returns {Promise<*>}
+     * Updates a document by ID with timestamps.
+     * @param {string} id - The ID of the document to update.
+     * @param {object} update - The update object.
+     * @returns {Promise<object>} The result of the update operation.
      */
     async updateWithTimestamps(id, update) {
-        update.updatedAt = new Date();
-
-        return await this.collection.updateOne(
-            {_id: new ObjectId(id)},
-            {$set: update}
-        );
+        const updatedDoc = { ...update, updatedAt: new Date() };
+        return await this.update(id, updatedDoc);
     }
 
     /**
-     * Gets a document from the collection by ID.
+     * Retrieves a document by ID.
      * @param {string} id - The ID of the document to retrieve.
      * @returns {Promise<object|null>} The document, or null if not found.
      */
     async getById(id) {
-        return await this.collection.findOne({_id: new ObjectId(id)});
+        if (!ObjectId.isValid(id)) {
+            throw new Error('Invalid ID format.');
+        }
+        return await this.collection.findOne({ _id: new ObjectId(id) });
     }
 
     /**
-     * Gets all documents from the collection.
-     * @returns {Promise<Array<object>>} An array of all documents.
+     * Retrieves all documents from the collection.
+     * @param {object} [query={}] - The query filter.
+     * @param {object} [options={}] - Optional query options (e.g., projection, sort).
+     * @returns {Promise<Array<object>>} An array of documents.
      */
-    async getAll() {
-        return await this.collection.find({}).toArray();
+    async getAll(query = {}, options = {}) {
+        return await this.collection.find(query, options).toArray();
     }
 
     /**
-     * Removes a document from the collection by ID.
+     * Removes a document by ID.
      * @param {string} id - The ID of the document to remove.
      * @returns {Promise<object>} The result of the delete operation.
      */
     async remove(id) {
-        return await this.collection.deleteOne({_id: new ObjectId(id)});
+        if (!ObjectId.isValid(id)) {
+            throw new Error('Invalid ID format.');
+        }
+        return await this.collection.deleteOne({ _id: new ObjectId(id) });
     }
 }
 
 module.exports.MongoRepository = MongoRepository;
 
 module.exports.getMongoDbRepository = async function (dbName, collectionName, options = {}) {
-
     if (!isValidNonEmptyString(dbName)) {
-        throw new Error('Provide valid dbName');
+        throw new Error('Provide a valid database name.');
     }
 
     if (!isValidNonEmptyString(collectionName)) {
-        throw new Error('Provide valid collectionName');
+        throw new Error('Provide a valid collection name.');
     }
 
     if (options.whitelistedCollections && !options.whitelistedCollections.includes(collectionName)) {
-        throw new TodoError(`Invalid collection name ${collectionName}`);
+        throw new Error(`Invalid collection name: ${collectionName}`);
     }
 
     const cacheKey = `${dbName}-${collectionName}`;
@@ -134,10 +137,10 @@ module.exports.getMongoDbRepository = async function (dbName, collectionName, op
 
     const client = getMongoClient();
     const db = client.db(dbName);
-    const repo = new MongoRepository(db, collectionName);
-    await repo.initialize();
+    const repository = new MongoRepository(db, collectionName);
+    await repository.initialize();
 
-    repositoryCache[cacheKey] = repo;
+    repositoryCache[cacheKey] = repository;
 
-    return repo;
+    return repository;
 };

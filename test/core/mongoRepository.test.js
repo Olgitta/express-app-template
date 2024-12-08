@@ -155,7 +155,7 @@ describe('MongoRepository', () => {
 
         const result = await repository.getAll();
 
-        expect(collectionMock.find).toHaveBeenCalledWith({});
+        expect(collectionMock.find).toHaveBeenCalledWith({}, {});
         expect(result).toEqual(documents);
     });
 
